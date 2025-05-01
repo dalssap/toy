@@ -1,7 +1,7 @@
-package com.dalssap.bot.handler
+package com.dalssap.toy.bot.handler
 
-import com.dalssap.bot.common.CommandHandler
-import com.dalssap.bot.common.CommandHandlers
+import com.dalssap.toy.bot.common.CommandHandler
+import com.dalssap.toy.bot.common.CommandHandlers
 
 @CommandHandlers
 class HelpHandler {

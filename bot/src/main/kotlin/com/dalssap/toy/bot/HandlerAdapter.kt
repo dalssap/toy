@@ -1,11 +1,11 @@
-package com.dalssap.bot
+package com.dalssap.toy.bot
 
-import com.dalssap.bot.common.CommandRequest
-import com.dalssap.bot.common.CommandHandler
-import com.dalssap.bot.common.CommandHandlers
-import com.dalssap.bot.common.CommandResponse
-import com.dalssap.bot.common.DefaultMessageResponse
-import com.dalssap.bot.common.RandomMessageResponse
+import com.dalssap.toy.bot.common.CommandRequest
+import com.dalssap.toy.bot.common.CommandHandler
+import com.dalssap.toy.bot.common.CommandHandlers
+import com.dalssap.toy.bot.common.CommandResponse
+import com.dalssap.toy.bot.common.DefaultMessageResponse
+import com.dalssap.toy.bot.common.RandomMessageResponse
 import jakarta.annotation.PostConstruct
 import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Component

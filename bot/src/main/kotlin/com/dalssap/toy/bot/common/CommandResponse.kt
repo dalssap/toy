@@ -1,4 +1,4 @@
-package com.dalssap.bot.common
+package com.dalssap.toy.bot.common
 
 
 interface CommandResponse {

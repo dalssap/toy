@@ -1,4 +1,4 @@
-package com.dalssap.bot
+package com.dalssap.toy.bot
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

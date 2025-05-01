@@ -1,3 +1,6 @@
 rootProject.name = "toy"
 
-include("bot")
+include(
+    "bot",
+    "common"
+)

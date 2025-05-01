@@ -1,13 +1,19 @@
-package com.dalssap.bot.common
+package com.dalssap.toy.bot.common
 
 import org.telegram.telegrambots.meta.api.objects.Update
+import kotlin.text.iterator
 
 class TelegramCommandRequest(): CommandRequest {
+    private var chatId: Long = 0
+    private var messageId: Int? = null
     private var command: String = ""
     private var message: String = ""
     private val options = mutableMapOf<String, String>()
 
     constructor(update: Update) : this() {
+        chatId = update.message.chatId
+        messageId = update.message.messageId
+
         parseText(update.message.text)
     }
 

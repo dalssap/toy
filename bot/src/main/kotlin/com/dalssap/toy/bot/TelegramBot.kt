@@ -1,6 +1,6 @@
-package com.dalssap.bot
+package com.dalssap.toy.bot
 
-import com.dalssap.bot.common.TelegramCommandRequest
+import com.dalssap.toy.bot.common.TelegramCommandRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient
