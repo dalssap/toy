@@ -1,8 +1,8 @@
-package com.dalssap.toy.bot
+package com.dalssap.toy.bot.handler
 
-import com.dalssap.toy.bot.common.CommandRequest
 import com.dalssap.toy.bot.common.CommandHandler
 import com.dalssap.toy.bot.common.CommandHandlers
+import com.dalssap.toy.bot.common.CommandRequest
 import com.dalssap.toy.bot.common.CommandResponse
 import com.dalssap.toy.bot.common.DefaultMessageResponse
 import com.dalssap.toy.bot.common.RandomMessageResponse

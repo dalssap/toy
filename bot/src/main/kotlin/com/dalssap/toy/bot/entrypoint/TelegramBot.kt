@@ -1,5 +1,6 @@
-package com.dalssap.toy.bot
+package com.dalssap.toy.bot.entrypoint
 
+import com.dalssap.toy.bot.handler.HandlerAdapter
 import com.dalssap.toy.bot.common.TelegramCommandRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
