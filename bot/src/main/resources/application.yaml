@@ -1,3 +1,17 @@
 spring:
   application:
     name: bot
+  config:
+    import: "classpath:common.yaml"
+---
+spring:
+  config:
+    import: "classpath:common-dev.yaml"
+    activate:
+      on-profile: dev
+---
+spring:
+  config:
+    import: "classpath:common-prod.yaml"
+    activate:
+      on-profile: prod
