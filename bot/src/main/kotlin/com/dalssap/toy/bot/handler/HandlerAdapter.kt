@@ -1,21 +1,20 @@
 package com.dalssap.toy.bot.handler
 
-import com.dalssap.toy.bot.common.CommandHandler
-import com.dalssap.toy.bot.common.CommandHandlers
-import com.dalssap.toy.bot.common.CommandRequest
-import com.dalssap.toy.bot.common.CommandResponse
-import com.dalssap.toy.bot.common.DefaultMessageResponse
-import com.dalssap.toy.bot.common.RandomMessageResponse
+import com.dalssap.toy.bot.common.*
+import com.dalssap.toy.bot.common.request.CommandRequest
+import com.dalssap.toy.bot.common.request.TelegramCommandRequest
 import jakarta.annotation.PostConstruct
 import org.springframework.context.ApplicationContext
 import org.springframework.stereotype.Component
+import org.telegram.telegrambots.meta.api.objects.Update
 import java.lang.reflect.Method
+import kotlin.reflect.full.findAnnotations
 
 @Component
 class HandlerAdapter(
     private val applicationContext: ApplicationContext
 ) {
-    private val handlers: MutableMap<String, CommandWrapper> = mutableMapOf()
+    private val handlers: MutableMap<String, HandlerClassWrapper> = mutableMapOf()
     private val defaultResponse = RandomMessageResponse(listOf("애옹", "..."))
     private val errorResponse = RandomMessageResponse(listOf("망가졌다옹...", "@!)@*(#***@"))
 
@@ -37,29 +36,48 @@ class HandlerAdapter(
     @PostConstruct
     fun init() {
         val handlerClasses = applicationContext.getBeansWithAnnotation(CommandHandlers::class.java)
+        val hash = mutableSetOf<String>()
 
         handlerClasses.values.forEach { handlerClass ->
+            val config = handlerClass.javaClass.getAnnotation(CommandHandlers::class.java)!!
+            val handlerWrappers = mutableListOf<HandlerWrapper>()
+
+            hash.putOrThrow(config.command)
+            config.aliases.forEach { alias -> hash.putOrThrow(alias) }
+
             handlerClass.javaClass.declaredMethods.forEach { handler ->
                 handler.getAnnotation(CommandHandler::class.java)?.let { annotation ->
-                    putHandler(annotation.command, CommandWrapper(annotation, handler, handlerClass))
-
-                    annotation.aliases.forEach { alias ->
-                        putHandler(alias, CommandWrapper(annotation, handler, handlerClass))
-                    }
+                    handlerWrappers.add(HandlerWrapper(annotation, handler, handlerClass))
                 }
             }
+
+            val handlerClassWrapper = HandlerClassWrapper(
+                handlerClass.defaultHandler(),
+                handlerWrappers
+            )
+
+            handlers.put(config.command, handlerClassWrapper)
+            config.aliases.forEach { alias -> handlers.put(alias, handlerClassWrapper) }
         }
     }
 
-    fun putHandler(key: String, commandWrapper: CommandWrapper) {
-        if (handlers.containsKey(key)) {
-            throw RuntimeException("Command $key already exists")
+    class HandlerClassWrapper(
+        val defaultHandler: HandlerWrapper,
+        val handlers: List<HandlerWrapper>,
+    ) {
+        fun execute(request: CommandRequest): CommandResponse {
+            return findHandler(request).execute(request)
         }
 
-        handlers[key] = commandWrapper
+        fun findHandler(request: CommandRequest): HandlerWrapper {
+            return handlers.firstOrNull { handler ->
+                val config = handler.annotation
+                config.matcher.matches(request, config.requireOptions)
+            } ?: defaultHandler
+        }
     }
 
-    class CommandWrapper(
+    class HandlerWrapper(
         val annotation: CommandHandler,
         val method: Method,
         val bean: Any
@@ -69,13 +87,22 @@ class HandlerAdapter(
         }
 
         fun execute(request: CommandRequest): CommandResponse {
-            val response = invoke(request)
+            val response = invoke(refineRequest(request))
 
             return when (response) {
                 is CommandResponse -> response
                 is String -> DefaultMessageResponse(response)
                 else -> completeResponse
             }
+        }
+
+        fun refineRequest(request: CommandRequest): CommandRequest {
+            val constructor = method.parameterTypes.filter { CommandRequest::class.java.isAssignableFrom(it) }
+                .filter { it != CommandRequest::class.java }
+                .map { it.getDeclaredConstructor(Update::class.java) }
+                .firstOrNull() ?: return request
+
+            return constructor.newInstance(request.update()) as CommandRequest
         }
 
         fun invoke(request: CommandRequest): Any {
@@ -86,12 +113,37 @@ class HandlerAdapter(
         fun extractParams(request: CommandRequest): Array<Any?> {
 
             return method.parameters.map { parameter ->
-                when (parameter.type) {
-                    CommandRequest::class.java -> request
-                    String::class.java -> request.option(parameter.name)
+                when {
+                    CommandRequest::class.java.isAssignableFrom(parameter.type) -> request
+                    parameter.type == String::class.java -> request.option(parameter.name)
                     else -> null
                 }
             }.toTypedArray()
         }
     }
+}
+
+fun <T: Any> MutableSet<T>.putOrThrow(e: T) {
+    if (this.contains(e)) {
+        throw IllegalArgumentException("${e.javaClass.name} is already set")
+    }
+
+    this.add(e)
+}
+
+fun Any.defaultHandler(): HandlerAdapter.HandlerWrapper {
+    this.javaClass.declaredMethods.forEach { method ->
+        if (method.isAnnotationPresent(DefaultCommandHandler::class.java)) {
+            val annotation = method.getAnnotation(DefaultCommandHandler::class.java)
+                .annotationClass.findAnnotations(CommandHandler::class)[0]
+
+            return HandlerAdapter.HandlerWrapper(
+                annotation,
+                method,
+                this
+            )
+        }
+    }
+
+    throw IllegalArgumentException("${this.javaClass.name} has no default handler")
 }

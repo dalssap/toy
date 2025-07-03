@@ -1,20 +1,27 @@
-package com.dalssap.toy.bot.common
+package com.dalssap.toy.bot.common.request
 
 import org.telegram.telegrambots.meta.api.objects.Update
 import kotlin.text.iterator
 
-class TelegramCommandRequest(): CommandRequest {
-    private var chatId: Long = 0
-    private var messageId: Int? = null
-    private var command: String = ""
-    private var message: String = ""
-    private val options = mutableMapOf<String, String>()
+open class TelegramCommandRequest private constructor(): CommandRequest {
+    protected var update: Update? = null
+    protected var chatId: Long = 0
+    protected var messageId: Int? = null
+    protected var command: String = ""
+    protected var message: String = ""
+    protected val messageTokens: MutableList<String> = mutableListOf()
+    protected val options = mutableMapOf<String, String>()
 
     constructor(update: Update) : this() {
-        chatId = update.message.chatId
-        messageId = update.message.messageId
+        this.update = update
+        this.chatId = update.message.chatId
+        this.messageId = update.message.messageId
 
         parseText(update.message.text)
+        postInit()
+    }
+
+    open fun postInit() {
     }
 
     private fun parseText(text: String) {
@@ -29,7 +36,7 @@ class TelegramCommandRequest(): CommandRequest {
         val tokens = mutableListOf<String>()
         var currentToken = StringBuilder()
         var inQuotes = false
-        
+
         for (char in text) {
             when {
                 char == '"' -> inQuotes = !inQuotes
@@ -42,27 +49,26 @@ class TelegramCommandRequest(): CommandRequest {
                 else -> currentToken.append(char)
             }
         }
-        
+
         if (currentToken.isNotEmpty()) {
             tokens.add(currentToken.toString())
         }
-        
+
         return tokens
     }
 
     private fun parseOptionsAndMessage(tokens: List<String>) {
-        val messageTokens = mutableListOf<String>()
         var i = 0
-        
+
         while (i < tokens.size) {
             val token = tokens[i]
             if (token.startsWith("-")) {
                 val optionName = token.substring(1)
                 if (i + 1 < tokens.size && !tokens[i + 1].startsWith("-")) {
-                    options[optionName] = tokens[i + 1]
+                    putOption(optionName, tokens[i + 1])
                     i += 2
                 } else {
-                    options[optionName] = ""
+                    putOption(optionName, "")
                     i += 1
                 }
             } else {
@@ -70,13 +76,27 @@ class TelegramCommandRequest(): CommandRequest {
                 i += 1
             }
         }
-        
+
         message = messageTokens.joinToString(" ")
     }
+
+    fun putOption(key: String, value: String) {
+        if (options.containsKey(key)) {
+            throw Exception("Option with key $key already exists.")
+        }
+
+        options[key] = value
+    }
+
+    override fun update() = update!!
 
     override fun command() = command
 
     override fun message() = message
 
     override fun option(key: String) = options[key]
+
+    override fun options() = options.keys
+
+    override fun hasOption(key: String) = options.containsKey(key)
 }

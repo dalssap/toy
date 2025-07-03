@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.LocalDate
 import java.time.ZonedDateTime
 
 
@@ -18,15 +19,22 @@ abstract class BaseEntity(
 
     @Column(nullable = false)
     @CreatedBy
-    val createdBy: String = "SYSTEM",
+    open var createdBy: String = "SYSTEM",
 
     @LastModifiedBy
-    val updatedBy: String = "SYSTEM",
+    open var updatedBy: String = "SYSTEM",
 
     @Column(updatable = false)
     @CreatedDate
-    val createdAt: ZonedDateTime = ZonedDateTime.now(),
+    open var createdAt: ZonedDateTime = ZonedDateTime.now(),
 
     @LastModifiedDate
-    val updatedAt: ZonedDateTime = createdAt,
+    open var updatedAt: ZonedDateTime = createdAt,
 )
+
+
+@MappedSuperclass
+abstract class LearningEntity(learnedAt: ZonedDateTime? = null): BaseEntity() {
+    open var learnedDate: LocalDate = learnedAt?.toLocalDate() ?: LocalDate.now()
+    open var learnedAt: ZonedDateTime = learnedAt ?: createdAt
+}

@@ -4,6 +4,16 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        session_factory:
+          statement_inspector: com.dalssap.toy.common.QueryCounterInspector
+
+decorator:
+  datasource:
+    datasource-proxy:
+      query:
+        enable-logging: true
+        log-level: DEBUG
+      count-query: true
 
 logging:
   level:

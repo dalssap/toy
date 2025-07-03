@@ -7,7 +7,7 @@ import java.time.ZonedDateTime
 import java.util.Date
 
 @Converter(autoApply = true)
-class ZonedDateTImeAttributeConverter: AttributeConverter<ZonedDateTime, Date> {
+class ZonedDateTimeAttributeConverter: AttributeConverter<ZonedDateTime, Date> {
 
     override fun convertToDatabaseColumn(zonedDateTime: ZonedDateTime?): Date? {
         return zonedDateTime?.let { Date.from(zonedDateTime.toInstant()) }

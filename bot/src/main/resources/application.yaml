@@ -1,4 +1,10 @@
 spring:
+  datasource:
+    url:
+    username:
+    password:
+    driver-class-name:
+
   application:
     name: bot
   config:
