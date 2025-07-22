@@ -25,9 +25,11 @@ fun Any?.join(separator: String = ", "): String? {
 }
 
 fun String?.isDateFormat(): Boolean {
+    if (this == null) return false
+
     for (formatter in DATE_TIME_FORMATTERS) {
         try {
-            LocalDate.parse(it, formatter)
+            LocalDate.parse(this, formatter)
             return true
         } catch (e: DateTimeParseException) {
             // continue trying other formats
